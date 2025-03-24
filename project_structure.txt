@@ -1,0 +1,89 @@
+.
+├── .DS_Store
+├── .env
+├── README.md
+├── api
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── docs
+│   │   ├── curls.txt
+│   │   └── openapi.yml
+│   ├── package-lock.json
+│   ├── package.json
+│   └── src
+│       ├── app.js
+│       ├── config
+│       ├── controllers
+│       │   ├── ingredientController.js
+│       │   └── recipeController.js
+│       ├── middleware
+│       ├── models
+│       │   ├── Ingredient.js
+│       │   ├── Recipe.js
+│       │   └── RecipeIngredient.js
+│       ├── routes
+│       │   ├── ingredientRoutes.js
+│       │   ├── recipeRoute.js
+│       │   └── recipeRoutes.js
+│       ├── server.js
+│       └── utils
+│           └── db.js
+├── copy-source.sh
+├── create-ui-files.sh
+├── database
+│   ├── .DS_Store
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── init.sql
+│   ├── migrations
+│   │   └── 001_initial_schema.sql
+│   ├── scripts
+│   └── seeds
+├── docker-compose.yml
+├── project_structure.txt
+└── ui
+    ├── .env
+    ├── Dockerfile
+    ├── README.md
+    ├── nginx.conf
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.js
+    ├── public
+    │   └── index.html
+    ├── src
+    │   ├── App.js
+    │   ├── assets
+    │   ├── components
+    │   │   ├── common
+    │   │   │   ├── ConfirmationDialog.js
+    │   │   │   ├── ErrorMessage.js
+    │   │   │   ├── Header.js
+    │   │   │   ├── Loading.js
+    │   │   │   └── Sidebar.js
+    │   │   ├── ingredients
+    │   │   │   ├── AddIngredientModal.js
+    │   │   │   ├── ImportIngredientsModal.js
+    │   │   │   ├── IngredientList.js
+    │   │   │   └── IngredientRow.js
+    │   │   └── recipes
+    │   │       ├── AddIngredientForm.js
+    │   │       ├── IngredientItem.js
+    │   │       └── RecipeCard.js
+    │   ├── index.css
+    │   ├── index.js
+    │   ├── layouts
+    │   │   └── MainLayout.js
+    │   ├── pages
+    │   │   ├── IngredientManagement.js
+    │   │   ├── NotFound.js
+    │   │   ├── RecipeDetail.js
+    │   │   ├── RecipeList.js
+    │   │   └── ShoppingList.js
+    │   └── services
+    │       ├── ingredientService.js
+    │       └── recipeService.js
+    └── tailwind.config.js
+
+25 directories, 62 files
