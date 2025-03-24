@@ -17,9 +17,10 @@ COPY . .
 RUN npx tailwindcss -i ./src/index.css -o ./src/tailwind.css
 RUN cat ./src/tailwind.css >> ./src/index.css
 
-# Set API URL environment variable for production build
-# This assumes api service is available at http://api:3000 in your Docker network
-ENV REACT_APP_API_URL=http://api:3000/api
+# Set API URL for production build using a build-time ARG
+# This will be eventually used by the browser, so it needs to use localhost
+ARG REACT_APP_API_URL=http://localhost:3000/api
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
 # Build the app
 RUN npm run build

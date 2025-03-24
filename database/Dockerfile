@@ -3,7 +3,6 @@ FROM postgres:latest
 # Copy initialization scripts
 COPY init.sql /docker-entrypoint-initdb.d/
 COPY migrations /docker-entrypoint-initdb.d/migrations/
-COPY seeds /docker-entrypoint-initdb.d/seeds/
 
 # Custom configuration can be added here
 # COPY postgresql.conf /etc/postgresql/postgresql.conf
