@@ -21,6 +21,7 @@ function App() {
                 <Route path="/" element={<MainLayout />}>
                     <Route index element={<RecipeList />} />
                     <Route path="recipes/:id" element={<RecipeDetail />} />
+                    <Route path="recipes/new" element={<RecipeDetail />} />
                     <Route path="ingredients" element={<IngredientManagement />} />
                     <Route path="shopping-list" element={<ShoppingList />} />
                     <Route path="*" element={<NotFound />} />

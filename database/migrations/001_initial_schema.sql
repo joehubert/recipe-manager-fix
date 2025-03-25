@@ -3,17 +3,10 @@
 
 -- Create enum type for ingredient categories
 CREATE TYPE ingredient_category AS ENUM (
-    'dairy', 
-    'meat', 
-    'produce', 
-    'bakery', 
-    'canned goods', 
-    'dry goods', 
-    'frozen', 
-    'spices', 
-    'condiments', 
-    'beverages', 
-    'other'
+    'meat',
+    'produce',
+    'starch',
+    'extra'
 );
 
 -- Create enum type for units

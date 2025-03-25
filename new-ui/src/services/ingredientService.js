@@ -33,7 +33,7 @@ export const updateIngredientName = async (id, name) => {
 
 // Update ingredient in_stock status
 export const updateInStock = async (id, inStock) => {
-    const response = await axios.patch(`${API_URL}/ingredients/${id}/in-stock`, { inStock });
+    const response = await axios.patch(`${API_URL}/ingredients/${id}/instock`, { inStock });
     return response.data;
 };
 

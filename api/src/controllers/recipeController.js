@@ -1,6 +1,7 @@
 // Recipe controller with CRUD operations
 const Recipe = require('../models/Recipe');
 const RecipeIngredient = require('../models/RecipeIngredient');
+const db = require('../utils/db');
 
 // Controller for recipe-related operations
 const recipeController = {
@@ -108,7 +109,17 @@ const recipeController = {
                 units || null
             );
 
-            res.status(201).json(recipeIngredient);
+            // Get the full recipe ingredient with ingredient information
+            const query = `
+                SELECT ri.*, i.name as ingredient_name, i.category, i.in_stock
+                FROM recipe_ingredient ri
+                JOIN ingredient i ON ri.ingredient_id = i.id
+                WHERE ri.id = $1
+            `;
+            const result = await db.query(query, [recipeIngredient.id]);
+            const fullRecipeIngredient = result.rows[0];
+
+            res.status(201).json(fullRecipeIngredient);
         } catch (error) {
             console.error('Error adding ingredient to recipe:', error);
             res.status(500).json({ error: 'Failed to add ingredient to recipe' });

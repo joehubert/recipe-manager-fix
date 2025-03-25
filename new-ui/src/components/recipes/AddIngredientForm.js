@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -6,10 +6,14 @@ import { getAllIngredients } from '../../services/ingredientService';
 import { addIngredientToRecipe } from '../../services/recipeService';
 
 const AddIngredientForm = ({ recipeId, onAdd, onCancel }) => {
+    console.log('AddIngredientForm render', { recipeId });
+
     const [ingredients, setIngredients] = useState([]);
     const [filteredIngredients, setFilteredIngredients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const isMounted = useRef(true);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIngredient, setSelectedIngredient] = useState(null);
@@ -17,19 +21,36 @@ const AddIngredientForm = ({ recipeId, onAdd, onCancel }) => {
     const [units, setUnits] = useState('');
     const [showResults, setShowResults] = useState(false);
 
+    // Cleanup on unmount
+    useEffect(() => {
+        console.log('AddIngredientForm mounted');
+        return () => {
+            console.log('AddIngredientForm unmounting');
+            isMounted.current = false;
+        };
+    }, []);
+
     // Fetch all ingredients
     useEffect(() => {
+        console.log('Starting fetchIngredients');
         const fetchIngredients = async () => {
             try {
                 setLoading(true);
                 const data = await getAllIngredients();
-                setIngredients(data);
-                setFilteredIngredients(data);
+                console.log('Fetched ingredients:', data?.length);
+                if (isMounted.current) {
+                    setIngredients(data);
+                    setFilteredIngredients(data);
+                    setLoading(false);
+                } else {
+                    console.log('Component unmounted, skipping state update');
+                }
             } catch (err) {
                 console.error('Failed to fetch ingredients:', err);
-                setError('Failed to load ingredients');
-            } finally {
-                setLoading(false);
+                if (isMounted.current) {
+                    setError('Failed to load ingredients');
+                    setLoading(false);
+                }
             }
         };
 
@@ -38,16 +59,20 @@ const AddIngredientForm = ({ recipeId, onAdd, onCancel }) => {
 
     // Filter ingredients based on search term
     useEffect(() => {
-        if (searchTerm) {
-            const filtered = ingredients.filter(ingredient =>
-                ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            setFilteredIngredients(filtered);
-            setShowResults(true);
-        } else {
-            setFilteredIngredients(ingredients);
-            setShowResults(false);
-        }
+        const updateFilteredResults = () => {
+            if (searchTerm) {
+                const filtered = ingredients.filter(ingredient =>
+                    ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                setFilteredIngredients(filtered);
+                setShowResults(true);
+            } else {
+                setFilteredIngredients(ingredients);
+                setShowResults(false);
+            }
+        };
+
+        updateFilteredResults();
     }, [searchTerm, ingredients]);
 
     const handleSelectIngredient = (ingredient) => {
@@ -58,24 +83,42 @@ const AddIngredientForm = ({ recipeId, onAdd, onCancel }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('handleSubmit called', { selectedIngredient, isSubmitting, isMounted: isMounted.current });
 
         if (!selectedIngredient) {
-            toast.error('Please select an ingredient');
+            if (isMounted.current) {
+                toast.error('Please select an ingredient');
+            }
             return;
         }
 
+        if (isSubmitting) return;
+
         try {
+            setIsSubmitting(true);
+            console.log('Adding ingredient to recipe:', { recipeId, ingredientId: selectedIngredient.id });
             const newIngredient = await addIngredientToRecipe(
                 recipeId,
                 selectedIngredient.id,
                 { amount: amount || null, units: units || null }
             );
+            console.log('Successfully added ingredient:', newIngredient);
 
-            onAdd(newIngredient);
-            toast.success(`${selectedIngredient.name} added to recipe`);
+            if (isMounted.current) {
+                onAdd(newIngredient);
+                toast.success(`${selectedIngredient.name} added to recipe`);
+            } else {
+                console.log('Component unmounted, skipping onAdd callback');
+            }
         } catch (err) {
             console.error('Failed to add ingredient:', err);
-            toast.error('Failed to add ingredient to recipe');
+            if (isMounted.current) {
+                toast.error('Failed to add ingredient to recipe');
+            }
+        } finally {
+            if (isMounted.current) {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -127,8 +170,8 @@ const AddIngredientForm = ({ recipeId, onAdd, onCancel }) => {
                                             >
                                                 <span>{ingredient.name}</span>
                                                 <span className={`text-xs px-2 py-1 rounded-full ${ingredient.in_stock
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
                                                     }`}>
                                                     {ingredient.in_stock ? 'In Stock' : 'Out of Stock'}
                                                 </span>

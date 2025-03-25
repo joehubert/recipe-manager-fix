@@ -59,17 +59,10 @@ const IngredientRow = ({
 
     const getCategoryBadgeColor = (category) => {
         const colors = {
-            'dairy': 'bg-blue-100 text-blue-800',
             'meat': 'bg-red-100 text-red-800',
             'produce': 'bg-green-100 text-green-800',
-            'bakery': 'bg-yellow-100 text-yellow-800',
-            'canned goods': 'bg-purple-100 text-purple-800',
-            'dry goods': 'bg-orange-100 text-orange-800',
-            'frozen': 'bg-cyan-100 text-cyan-800',
-            'spices': 'bg-rose-100 text-rose-800',
-            'condiments': 'bg-amber-100 text-amber-800',
-            'beverages': 'bg-indigo-100 text-indigo-800',
-            'other': 'bg-gray-100 text-gray-800'
+            'starch': 'bg-yellow-100 text-yellow-800',
+            'extra': 'bg-gray-100 text-gray-800'
         };
 
         return colors[category] || 'bg-gray-100 text-gray-800';
@@ -142,8 +135,8 @@ const IngredientRow = ({
                 <button
                     onClick={handleToggleInStock}
                     className={`px-2 py-1 text-xs font-medium rounded-full flex items-center ${ingredient.in_stock
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                        : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
                 >
                     {ingredient.in_stock ? (

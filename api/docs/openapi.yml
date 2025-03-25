@@ -522,7 +522,7 @@ paths:
                   example: Tomato
                 category:
                   type: string
-                  enum: [dairy, meat, produce, bakery, "canned goods", "dry goods", frozen, spices, condiments, beverages, other]
+                  enum: [meat, produce, starch, extra]
                   example: produce
       responses:
         '201':
@@ -563,8 +563,8 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [dairy, meat, produce, bakery, "canned goods", "dry goods", frozen, spices, condiments, beverages, other]
-                  example: [produce, dairy]
+                    enum: [meat, produce, starch, extra]
+                  example: [produce, meat]
       responses:
         '200':
           description: List of ingredients in the specified categories
@@ -802,7 +802,7 @@ paths:
                         example: Tomato
                       category:
                         type: string
-                        enum: [dairy, meat, produce, bakery, "canned goods", "dry goods", frozen, spices, condiments, beverages, other]
+                        enum: [meat, produce, starch, extra]
                         example: produce
       responses:
         '201':
@@ -854,7 +854,7 @@ components:
           example: Tomato
         category:
           type: string
-          enum: [dairy, meat, produce, bakery, "canned goods", "dry goods", frozen, spices, condiments, beverages, other]
+          enum: [meat, produce, starch, extra]
           example: produce
         in_stock:
           type: boolean

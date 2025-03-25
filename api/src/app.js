@@ -14,7 +14,8 @@ app.use(cors({
 // Middleware setup
 app.use(bodyParser.json());
 
-app.get('/health', (req, res) => {
+// Move health endpoint under /api prefix
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
@@ -26,8 +27,8 @@ const ingredientRoutes = require('./routes/ingredientRoutes');
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 
-// Debug route
-app.get('/debug', (req, res) => {
+// Debug route under /api prefix
+app.get('/api/debug', (req, res) => {
   const routes = app._router.stack
     .filter(r => r.route)
     .map(r => r.route.path)

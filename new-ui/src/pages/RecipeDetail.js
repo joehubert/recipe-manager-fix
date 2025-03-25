@@ -16,12 +16,14 @@ import {
     updateRecipeName,
     toggleFavorite,
     deleteRecipe,
-    duplicateRecipe
+    duplicateRecipe,
+    createRecipe
 } from '../services/recipeService';
 
 const RecipeDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    console.log('RecipeDetail render', { id });
 
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -34,10 +36,26 @@ const RecipeDetail = () => {
 
     // Fetch recipe data
     useEffect(() => {
+        console.log('RecipeDetail fetching recipe', { id });
         const fetchRecipe = async () => {
             try {
                 setLoading(true);
+                if (!id || id === 'new') {
+                    console.log('Initializing new recipe');
+                    // For new recipe, initialize with empty state
+                    setRecipe({
+                        id: null,
+                        name: '',
+                        favorite: false,
+                        ingredients: []
+                    });
+                    setEditedName('');
+                    setLoading(false);
+                    return;
+                }
+
                 const data = await getRecipeById(id);
+                console.log('Recipe fetched:', data);
                 setRecipe(data);
                 setEditedName(data.name);
             } catch (err) {
@@ -52,6 +70,7 @@ const RecipeDetail = () => {
     }, [id]);
 
     const handleToggleFavorite = async () => {
+        if (!recipe.id) return; // Don't allow toggling favorite for new recipe
         try {
             const updatedRecipe = await toggleFavorite(recipe.id);
             setRecipe({
@@ -75,15 +94,25 @@ const RecipeDetail = () => {
         }
 
         try {
-            const updatedRecipe = await updateRecipeName(recipe.id, editedName);
-            setRecipe({
-                ...recipe,
-                name: updatedRecipe.name
-            });
-            setIsEditing(false);
-            toast.success('Recipe name updated');
+            if (!recipe.id || id === 'new') {
+                // Create new recipe
+                const newRecipe = await createRecipe(editedName);
+                setRecipe(newRecipe);
+                setIsEditing(false);
+                toast.success('Recipe created successfully');
+                navigate(`/recipes/${newRecipe.id}`);
+            } else {
+                // Update existing recipe
+                const updatedRecipe = await updateRecipeName(recipe.id, editedName);
+                setRecipe({
+                    ...recipe,
+                    name: updatedRecipe.name
+                });
+                setIsEditing(false);
+                toast.success('Recipe name updated');
+            }
         } catch (err) {
-            toast.error('Failed to update recipe name');
+            toast.error('Failed to save recipe name');
         }
     };
 
@@ -93,6 +122,7 @@ const RecipeDetail = () => {
     };
 
     const handleDuplicate = async () => {
+        if (!recipe.id) return; // Don't allow duplicating new recipe
         try {
             const newRecipe = await duplicateRecipe(recipe.id);
             toast.success('Recipe duplicated successfully');
@@ -103,6 +133,7 @@ const RecipeDetail = () => {
     };
 
     const handleDelete = async () => {
+        if (!recipe.id) return; // Don't allow deleting new recipe
         try {
             await deleteRecipe(recipe.id);
             toast.success('Recipe deleted successfully');
@@ -114,7 +145,7 @@ const RecipeDetail = () => {
     };
 
     const goToShoppingList = () => {
-        // Add recipe to shopping list and navigate to shopping list page
+        if (!recipe.id) return; // Don't allow adding new recipe to shopping list
         navigate('/shopping-list', { state: { selectedRecipeIds: [recipe.id] } });
     };
 
@@ -145,6 +176,7 @@ const RecipeDetail = () => {
                                         onChange={(e) => setEditedName(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         autoFocus
+                                        placeholder="Enter recipe name"
                                     />
                                     <button
                                         onClick={handleSaveName}
@@ -163,7 +195,7 @@ const RecipeDetail = () => {
                                 </div>
                             ) : (
                                 <h1 className="text-2xl font-bold text-gray-900 break-words">
-                                    {recipe.name}
+                                    {recipe.name || 'New Recipe'}
                                     <button
                                         onClick={handleEditName}
                                         className="ml-2 text-gray-400 hover:text-gray-700"
@@ -176,16 +208,18 @@ const RecipeDetail = () => {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                            <button
-                                onClick={handleToggleFavorite}
-                                className={`p-2 rounded-full ${recipe.favorite
+                            {recipe.id && (
+                                <button
+                                    onClick={handleToggleFavorite}
+                                    className={`p-2 rounded-full ${recipe.favorite
                                         ? 'text-yellow-500 hover:text-yellow-600'
                                         : 'text-gray-400 hover:text-gray-700'
-                                    }`}
-                                aria-label={recipe.favorite ? 'Remove from favorites' : 'Add to favorites'}
-                            >
-                                <Star className={`h-6 w-6 ${recipe.favorite ? 'fill-current' : ''}`} />
-                            </button>
+                                        }`}
+                                    aria-label={recipe.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                                >
+                                    <Star className={`h-6 w-6 ${recipe.favorite ? 'fill-current' : ''}`} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -197,35 +231,39 @@ const RecipeDetail = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={goToShoppingList}
-                            className="flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        >
-                            <ShoppingCart className="h-4 w-4 mr-1.5" />
-                            Add to Shopping List
-                        </button>
+                        {recipe.id && (
+                            <>
+                                <button
+                                    onClick={goToShoppingList}
+                                    className="flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                >
+                                    <ShoppingCart className="h-4 w-4 mr-1.5" />
+                                    Add to Shopping List
+                                </button>
 
-                        <button
-                            onClick={handleDuplicate}
-                            className="flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        >
-                            <Copy className="h-4 w-4 mr-1.5" />
-                            Duplicate
-                        </button>
+                                <button
+                                    onClick={handleDuplicate}
+                                    className="flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Copy className="h-4 w-4 mr-1.5" />
+                                    Duplicate
+                                </button>
 
-                        <button
-                            onClick={() => setShowDeleteConfirmation(true)}
-                            className="flex items-center px-3 py-1.5 text-sm bg-white border border-red-300 rounded-lg text-red-600 hover:bg-red-50"
-                        >
-                            <Trash2 className="h-4 w-4 mr-1.5" />
-                            Delete
-                        </button>
+                                <button
+                                    onClick={() => setShowDeleteConfirmation(true)}
+                                    className="flex items-center px-3 py-1.5 text-sm bg-white border border-red-300 rounded-lg text-red-600 hover:bg-red-50"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-1.5" />
+                                    Delete
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 {/* Ingredients List */}
                 <div className="p-6">
-                    {recipe.ingredients && recipe.ingredients.length > 0 ? (
+                    {recipe.id && recipe.ingredients && recipe.ingredients.length > 0 ? (
                         <div className="space-y-3">
                             {recipe.ingredients.map((ingredient) => (
                                 <IngredientItem
@@ -233,7 +271,6 @@ const RecipeDetail = () => {
                                     ingredient={ingredient}
                                     recipeId={recipe.id}
                                     onUpdate={(updatedIngredient) => {
-                                        // Update the recipe with the modified ingredient
                                         setRecipe({
                                             ...recipe,
                                             ingredients: recipe.ingredients.map(ing =>
@@ -242,7 +279,6 @@ const RecipeDetail = () => {
                                         });
                                     }}
                                     onRemove={(ingredientId) => {
-                                        // Update the recipe by removing the ingredient
                                         setRecipe({
                                             ...recipe,
                                             ingredients: recipe.ingredients.filter(ing => ing.id !== ingredientId)
@@ -253,45 +289,62 @@ const RecipeDetail = () => {
                         </div>
                     ) : (
                         <div className="text-center p-8">
-                            <p className="text-gray-500 mb-4">This recipe doesn't have any ingredients yet.</p>
+                            <p className="text-gray-500 mb-4">
+                                {recipe.id
+                                    ? "This recipe doesn't have any ingredients yet."
+                                    : "Add ingredients after saving the recipe name."}
+                            </p>
                         </div>
                     )}
 
-                    {showAddIngredient ? (
-                        <AddIngredientForm
-                            recipeId={recipe.id}
-                            onAdd={(newIngredient) => {
-                                // Update the recipe with the new ingredient
-                                setRecipe({
-                                    ...recipe,
-                                    ingredients: [...recipe.ingredients, newIngredient]
-                                });
-                                setShowAddIngredient(false);
-                            }}
-                            onCancel={() => setShowAddIngredient(false)}
-                        />
-                    ) : (
-                        <button
-                            onClick={() => setShowAddIngredient(true)}
-                            className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                        >
-                            <Plus className="h-5 w-5 mr-2" />
-                            Add Ingredient
-                        </button>
+                    {recipe.id && (
+                        showAddIngredient ? (
+                            <AddIngredientForm
+                                key={recipe.id}
+                                recipeId={recipe.id}
+                                onAdd={(newIngredient) => {
+                                    console.log('AddIngredientForm onAdd called', { newIngredient, recipe });
+                                    if (recipe && recipe.ingredients) {
+                                        setRecipe({
+                                            ...recipe,
+                                            ingredients: [...recipe.ingredients, newIngredient]
+                                        });
+                                        setShowAddIngredient(false);
+                                    }
+                                }}
+                                onCancel={() => {
+                                    console.log('AddIngredientForm onCancel called');
+                                    setShowAddIngredient(false);
+                                }}
+                            />
+                        ) : (
+                            <button
+                                onClick={() => {
+                                    console.log('Show add ingredient clicked');
+                                    setShowAddIngredient(true);
+                                }}
+                                className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            >
+                                <Plus className="h-5 w-5 mr-2" />
+                                Add Ingredient
+                            </button>
+                        )
                     )}
                 </div>
             </div>
 
             {/* Delete Confirmation Dialog */}
-            <ConfirmationDialog
-                isOpen={showDeleteConfirmation}
-                onClose={() => setShowDeleteConfirmation(false)}
-                onConfirm={handleDelete}
-                title="Delete Recipe"
-                message={`Are you sure you want to delete "${recipe.name}"? This action cannot be undone.`}
-                confirmText="Delete"
-                isDangerous={true}
-            />
+            {recipe.id && (
+                <ConfirmationDialog
+                    isOpen={showDeleteConfirmation}
+                    onClose={() => setShowDeleteConfirmation(false)}
+                    onConfirm={handleDelete}
+                    title="Delete Recipe"
+                    message={`Are you sure you want to delete "${recipe.name}"? This action cannot be undone.`}
+                    confirmText="Delete"
+                    isDangerous={true}
+                />
+            )}
         </div>
     );
 };

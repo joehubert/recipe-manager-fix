@@ -3,9 +3,9 @@ const db = require('../utils/db');
 
 class Ingredient {
     // Create a new ingredient
-    static async create({ name, category }) {
-        const query = 'INSERT INTO ingredient (name, category, in_stock) VALUES ($1, $2, false) RETURNING *';
-        const result = await db.query(query, [name, category]);
+    static async create({ name, category, in_stock = false }) {
+        const query = 'INSERT INTO ingredient (name, category, in_stock) VALUES ($1, $2, $3) RETURNING *';
+        const result = await db.query(query, [name, category, in_stock]);
         return result.rows[0];
     }
 

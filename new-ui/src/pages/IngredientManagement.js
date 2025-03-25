@@ -24,17 +24,10 @@ const IngredientManagement = () => {
     // Category options from the enum in database
     const categoryOptions = [
         'all',
-        'dairy',
         'meat',
         'produce',
-        'bakery',
-        'canned goods',
-        'dry goods',
-        'frozen',
-        'spices',
-        'condiments',
-        'beverages',
-        'other'
+        'starch',
+        'extra'
     ];
 
     // Fetch all ingredients

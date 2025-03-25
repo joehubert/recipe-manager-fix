@@ -6,13 +6,13 @@ const ingredientController = {
     // Create a new ingredient
     async create(req, res) {
         try {
-            const { name, category } = req.body;
+            const { name, category, in_stock } = req.body;
 
             if (!name || !category) {
                 return res.status(400).json({ error: 'Name and category are required' });
             }
 
-            const ingredient = await Ingredient.create({ name, category });
+            const ingredient = await Ingredient.create({ name, category, in_stock });
             res.status(201).json(ingredient);
         } catch (error) {
             console.error('Error creating ingredient:', error);
