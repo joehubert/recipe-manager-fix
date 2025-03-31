@@ -1,3 +1,5 @@
+// Replace the entire content of new-ui/src/pages/IngredientManagement.js with this comprehensive fix
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Filter, Search, Upload, Check, CheckSquare, Square, X, ArrowUp, ArrowDown } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -90,6 +92,7 @@ const IngredientManagement = () => {
     }, [ingredients, searchTerm, activeCategory, sortConfig]);
 
     const handleSort = (key) => {
+        console.log('Sort clicked:', key); // Debugging
         setSortConfig(current => ({
             key,
             direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
@@ -98,7 +101,7 @@ const IngredientManagement = () => {
 
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return null;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+        return sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />;
     };
 
     const handleAddIngredient = (newIngredient) => {
@@ -150,6 +153,18 @@ const IngredientManagement = () => {
         }
     };
 
+    const handleUpdateIngredient = (updatedIngredient) => {
+        const updatedIngredients = ingredients.map(ingredient =>
+            ingredient.id === updatedIngredient.id ? updatedIngredient : ingredient
+        );
+        setIngredients(updatedIngredients);
+    };
+
+    const handleDeleteIngredient = (id) => {
+        setIngredients(ingredients.filter(ingredient => ingredient.id !== id));
+        setSelectedIngredients(selectedIngredients.filter(selectedId => selectedId !== id));
+    };
+
     if (loading) return <Loading />;
     if (error) return <ErrorMessage message={error} />;
 
@@ -194,6 +209,7 @@ const IngredientManagement = () => {
                             <button
                                 onClick={() => handleBulkUpdateInStock(true)}
                                 className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                disabled={selectedIngredients.length === 0}
                             >
                                 <Check className="h-4 w-4 mr-2" />
                                 Mark Selected In Stock
@@ -201,6 +217,7 @@ const IngredientManagement = () => {
                             <button
                                 onClick={() => handleBulkUpdateInStock(false)}
                                 className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                disabled={selectedIngredients.length === 0}
                             >
                                 <X className="h-4 w-4 mr-2" />
                                 Mark Selected Out of Stock
@@ -231,96 +248,84 @@ const IngredientManagement = () => {
                     </div>
                 </div>
 
-                {/* Table headers */}
-                // Replace it with this proper table structure:
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-4 py-3 w-12">
-                                <button
-                                    onClick={handleSelectAll}
-                                    className="flex items-center justify-center w-4 h-4"
-                                >
-                                    {selectedIngredients.length === filteredIngredients.length ? (
-                                        <CheckSquare className="h-4 w-4 text-emerald-600" />
-                                    ) : (
-                                        <Square className="h-4 w-4 text-gray-400" />
-                                    )}
-                                </button>
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-left">
-                                <button
-                                    onClick={() => handleSort('name')}
-                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                                >
-                                    Name
-                                    {getSortIcon('name')}
-                                </button>
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-left">
-                                <button
-                                    onClick={() => handleSort('category')}
-                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                                >
-                                    Category
-                                    {getSortIcon('category')}
-                                </button>
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-left">
-                                <button
-                                    onClick={() => handleSort('in_stock')}
-                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                                >
-                                    Status
-                                    {getSortIcon('in_stock')}
-                                </button>
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-right">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        <IngredientList
-                            ingredients={filteredIngredients}
-                            selectedIngredients={selectedIngredients}
-                            onSelect={handleSelectIngredient}
-                            onUpdate={(updatedIngredient) => {
-                                const updatedIngredients = ingredients.map(ingredient =>
-                                    ingredient.id === updatedIngredient.id ? updatedIngredient : ingredient
-                                );
-                                setIngredients(updatedIngredients);
-                            }}
-                            onDelete={(id) => {
-                                setIngredients(ingredients.filter(ingredient => ingredient.id !== id));
-                                setSelectedIngredients(selectedIngredients.filter(selectedId => selectedId !== id));
-                            }}
-                        />
-                    </tbody>
-                </table>
-
-                {/* Ingredient list */}
-                <IngredientList
-                    ingredients={filteredIngredients}
-                    selectedIngredients={selectedIngredients}
-                    onSelect={handleSelectIngredient}
-                    onUpdate={handleBulkUpdateInStock}
-                    onDelete={() => { }}
-                />
+                {/* Table */}
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th scope="col" className="px-6 py-3 w-12 text-left">
+                                    <div className="flex items-center">
+                                        <button
+                                            onClick={handleSelectAll}
+                                            className="flex items-center justify-center p-1 rounded hover:bg-gray-200"
+                                            aria-label={
+                                                selectedIngredients.length === filteredIngredients.length
+                                                    ? "Deselect all ingredients"
+                                                    : "Select all ingredients"
+                                            }
+                                        >
+                                            {selectedIngredients.length === filteredIngredients.length ? (
+                                                <CheckSquare className="h-5 w-5 text-emerald-600" />
+                                            ) : (
+                                                <Square className="h-5 w-5 text-gray-400" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left">
+                                    <button
+                                        onClick={() => handleSort('name')}
+                                        className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                    >
+                                        Name {getSortIcon('name')}
+                                    </button>
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left">
+                                    <button
+                                        onClick={() => handleSort('category')}
+                                        className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                    >
+                                        Category {getSortIcon('category')}
+                                    </button>
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left">
+                                    <button
+                                        onClick={() => handleSort('in_stock')}
+                                        className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                    >
+                                        Status {getSortIcon('in_stock')}
+                                    </button>
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-right">
+                                    <span className="text-sm font-medium text-gray-700">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            <IngredientList
+                                ingredients={filteredIngredients}
+                                selectedIngredients={selectedIngredients}
+                                onSelect={handleSelectIngredient}
+                                onUpdate={handleUpdateIngredient}
+                                onDelete={handleDeleteIngredient}
+                            />
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <AddIngredientModal
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
                 onAdd={handleAddIngredient}
-                categoryOptions={categoryOptions}
+                categoryOptions={categoryOptions.filter(c => c !== 'all')}
             />
 
             <ImportIngredientsModal
                 isOpen={showImportModal}
                 onClose={() => setShowImportModal(false)}
                 onImport={handleImportIngredients}
-                categoryOptions={categoryOptions}
+                categoryOptions={categoryOptions.filter(c => c !== 'all')}
             />
         </div>
     );
