@@ -74,6 +74,7 @@ const IngredientRow = ({
                 <button
                     onClick={() => onSelect(ingredient.id)}
                     className="p-2 rounded hover:bg-gray-200"
+                    aria-label={isSelected ? "Deselect ingredient" : "Select ingredient"}
                 >
                     {isSelected ? (
                         <CheckSquare className="h-5 w-5 text-emerald-600" />
@@ -96,6 +97,7 @@ const IngredientRow = ({
                         <button
                             onClick={handleSaveName}
                             className="ml-2 p-1 text-green-600 hover:text-green-800"
+                            aria-label="Save ingredient name"
                         >
                             <Save className="h-5 w-5" />
                         </button>
@@ -105,6 +107,7 @@ const IngredientRow = ({
                                 setIsEditing(false);
                             }}
                             className="ml-1 p-1 text-red-600 hover:text-red-800"
+                            aria-label="Cancel editing"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -138,6 +141,7 @@ const IngredientRow = ({
                         ? 'bg-green-100 text-green-800 hover:bg-green-200'
                         : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
+                    aria-label={`Mark ${ingredient.name} as ${ingredient.in_stock ? 'out of stock' : 'in stock'}`}
                 >
                     {ingredient.in_stock ? (
                         <>
@@ -157,7 +161,7 @@ const IngredientRow = ({
                 <button
                     onClick={() => setShowDeleteConfirmation(true)}
                     className="p-2 text-gray-400 hover:text-red-600"
-                    aria-label="Delete ingredient"
+                    aria-label={`Delete ${ingredient.name}`}
                 >
                     <Trash2 className="h-5 w-5" />
                 </button>

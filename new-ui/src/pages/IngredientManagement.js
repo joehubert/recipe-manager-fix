@@ -221,8 +221,8 @@ const IngredientManagement = () => {
                                 key={category}
                                 onClick={() => setActiveCategory(category)}
                                 className={`px-3 py-1.5 rounded-full text-sm capitalize whitespace-nowrap ${activeCategory === category
-                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
                                 {category}
@@ -232,50 +232,72 @@ const IngredientManagement = () => {
                 </div>
 
                 {/* Table headers */}
-                <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
-                    <div className="col-span-1">
-                        <button
-                            onClick={handleSelectAll}
-                            className="flex items-center justify-center w-4 h-4"
-                        >
-                            {selectedIngredients.length === filteredIngredients.length ? (
-                                <CheckSquare className="h-4 w-4 text-emerald-600" />
-                            ) : (
-                                <Square className="h-4 w-4 text-gray-400" />
-                            )}
-                        </button>
-                    </div>
-                    <div className="col-span-4">
-                        <button
-                            onClick={() => handleSort('name')}
-                            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                        >
-                            Name
-                            {getSortIcon('name')}
-                        </button>
-                    </div>
-                    <div className="col-span-3">
-                        <button
-                            onClick={() => handleSort('category')}
-                            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                        >
-                            Category
-                            {getSortIcon('category')}
-                        </button>
-                    </div>
-                    <div className="col-span-2">
-                        <button
-                            onClick={() => handleSort('in_stock')}
-                            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                        >
-                            Status
-                            {getSortIcon('in_stock')}
-                        </button>
-                    </div>
-                    <div className="col-span-2 text-right text-sm font-medium text-gray-700">
-                        Actions
-                    </div>
-                </div>
+                // Replace it with this proper table structure:
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th scope="col" className="px-4 py-3 w-12">
+                                <button
+                                    onClick={handleSelectAll}
+                                    className="flex items-center justify-center w-4 h-4"
+                                >
+                                    {selectedIngredients.length === filteredIngredients.length ? (
+                                        <CheckSquare className="h-4 w-4 text-emerald-600" />
+                                    ) : (
+                                        <Square className="h-4 w-4 text-gray-400" />
+                                    )}
+                                </button>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left">
+                                <button
+                                    onClick={() => handleSort('name')}
+                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    Name
+                                    {getSortIcon('name')}
+                                </button>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left">
+                                <button
+                                    onClick={() => handleSort('category')}
+                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    Category
+                                    {getSortIcon('category')}
+                                </button>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left">
+                                <button
+                                    onClick={() => handleSort('in_stock')}
+                                    className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    Status
+                                    {getSortIcon('in_stock')}
+                                </button>
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        <IngredientList
+                            ingredients={filteredIngredients}
+                            selectedIngredients={selectedIngredients}
+                            onSelect={handleSelectIngredient}
+                            onUpdate={(updatedIngredient) => {
+                                const updatedIngredients = ingredients.map(ingredient =>
+                                    ingredient.id === updatedIngredient.id ? updatedIngredient : ingredient
+                                );
+                                setIngredients(updatedIngredients);
+                            }}
+                            onDelete={(id) => {
+                                setIngredients(ingredients.filter(ingredient => ingredient.id !== id));
+                                setSelectedIngredients(selectedIngredients.filter(selectedId => selectedId !== id));
+                            }}
+                        />
+                    </tbody>
+                </table>
 
                 {/* Ingredient list */}
                 <IngredientList
