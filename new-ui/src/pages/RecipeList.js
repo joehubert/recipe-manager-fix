@@ -6,7 +6,7 @@ import { Grid, List, Plus, Filter, Star, CheckCircle, Search } from 'lucide-reac
 import RecipeCard from '../components/recipes/RecipeCard';
 import Loading from '../components/common/Loading';
 import ErrorMessage from '../components/common/ErrorMessage';
-import { getAllRecipes } from '../services/recipeService';
+import { getAllRecipes, getRecipesWithAllInStock, getRecipesWithAllButThreshold } from '../services/recipeService';
 
 const RecipeList = () => {
     const navigate = useNavigate();
@@ -27,7 +27,16 @@ const RecipeList = () => {
         const fetchRecipes = async () => {
             try {
                 setLoading(true);
-                const data = await getAllRecipes();
+                let data;
+
+                if (showOnlyInStock) {
+                    data = await getRecipesWithAllInStock();
+                } else if (missingThreshold !== null) {
+                    data = await getRecipesWithAllButThreshold(missingThreshold);
+                } else {
+                    data = await getAllRecipes();
+                }
+
                 setRecipes(data);
                 setFilteredRecipes(data);
             } catch (err) {
@@ -39,7 +48,7 @@ const RecipeList = () => {
         };
 
         fetchRecipes();
-    }, []);
+    }, [showOnlyInStock, missingThreshold]);
 
     // Apply filters and search
     useEffect(() => {
@@ -57,20 +66,8 @@ const RecipeList = () => {
             result = result.filter(recipe => recipe.favorite);
         }
 
-        // Apply in-stock filter
-        if (showOnlyInStock) {
-            result = result.filter(recipe => recipe.allIngredientsInStock);
-        }
-
-        // Apply missing threshold filter
-        if (missingThreshold !== null) {
-            result = result.filter(recipe =>
-                recipe.missingIngredientsCount <= missingThreshold
-            );
-        }
-
         setFilteredRecipes(result);
-    }, [recipes, searchTerm, showOnlyFavorites, showOnlyInStock, missingThreshold]);
+    }, [recipes, searchTerm, showOnlyFavorites]);
 
     const handleCreateRecipe = () => {
         navigate('/recipes/new');
@@ -87,25 +84,32 @@ const RecipeList = () => {
     if (error) return <ErrorMessage message={error} retry={() => window.location.reload()} fullPage />;
 
     return (
-        <div>
-            {/* Search and Filters Section */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-                <div className="md:flex md:justify-between md:items-center space-y-4 md:space-y-0">
-                    {/* Search input - visible on mobile, hidden on medium+ screens (handled in header) */}
-                    <div className="relative md:hidden">
+        <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Recipes</h1>
+                <button
+                    onClick={handleCreateRecipe}
+                    className="flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-emerald-700"
+                >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Recipe
+                </button>
+            </div>
+
+            <div className="bg-white shadow rounded-lg p-6">
+                {/* Search and Filters */}
+                <div className="mb-6">
+                    <div className="relative mb-4">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search recipes..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                        </div>
                     </div>
 
-                    {/* Filters */}
                     <div className="flex items-center space-x-4 overflow-x-auto pb-2">
                         <span className="text-gray-700 flex items-center whitespace-nowrap">
                             <Filter className="h-5 w-5 mr-1" />
@@ -159,83 +163,51 @@ const RecipeList = () => {
                             </button>
                         )}
                     </div>
+                </div>
 
-                    {/* View Toggle and Create Button */}
+                {/* View Toggle and Create Button */}
+                <div className="flex justify-end mb-4">
                     <div className="flex items-center space-x-2">
-                        <div className="bg-gray-100 rounded-lg p-1 flex">
-                            <button
-                                className={`p-1.5 rounded ${view === 'grid' ? 'bg-white shadow' : 'text-gray-500 hover:text-gray-700'}`}
-                                onClick={() => setView('grid')}
-                                aria-label="Grid view"
-                            >
-                                <Grid className="h-5 w-5" />
-                            </button>
-                            <button
-                                className={`p-1.5 rounded ${view === 'list' ? 'bg-white shadow' : 'text-gray-500 hover:text-gray-700'}`}
-                                onClick={() => setView('list')}
-                                aria-label="List view"
-                            >
-                                <List className="h-5 w-5" />
-                            </button>
-                        </div>
-
                         <button
-                            onClick={handleCreateRecipe}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center"
+                            onClick={() => setView('grid')}
+                            className={`p-2 rounded ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                         >
-                            <Plus className="h-5 w-5 mr-1" />
-                            New Recipe
+                            <Grid className="h-5 w-5 text-gray-600" />
+                        </button>
+                        <button
+                            onClick={() => setView('list')}
+                            className={`p-2 rounded ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        >
+                            <List className="h-5 w-5 text-gray-600" />
                         </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Results */}
-            {filteredRecipes.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No recipes found</h3>
-                    <p className="text-gray-600 mb-4">
-                        {recipes.length === 0
-                            ? "You haven't created any recipes yet."
-                            : "No recipes match your current filters."
-                        }
-                    </p>
-                    {recipes.length === 0 ? (
-                        <button
-                            onClick={handleCreateRecipe}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg inline-flex items-center"
-                        >
-                            <Plus className="h-5 w-5 mr-1" />
-                            Create Your First Recipe
-                        </button>
-                    ) : (
-                        <button
-                            onClick={resetFilters}
-                            className="text-emerald-600 hover:text-emerald-700 font-medium"
-                        >
-                            Clear filters
-                        </button>
-                    )}
-                </div>
-            ) : (
-                <div>
-                    {view === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {filteredRecipes.map(recipe => (
-                                <div key={recipe.id} className="h-full">
-                                    <RecipeCard recipe={recipe} view="grid" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {filteredRecipes.map(recipe => (
-                                <RecipeCard key={recipe.id} recipe={recipe} view="list" />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
+                {/* Recipe List */}
+                {filteredRecipes.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No recipes found</p>
+                    </div>
+                ) : (
+                    <div>
+                        {view === 'grid' ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {filteredRecipes.map(recipe => (
+                                    <div key={recipe.id} className="h-full">
+                                        <RecipeCard recipe={recipe} view="grid" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {filteredRecipes.map(recipe => (
+                                    <RecipeCard key={recipe.id} recipe={recipe} view="list" />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

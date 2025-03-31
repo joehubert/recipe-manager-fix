@@ -53,7 +53,7 @@ class Recipe {
         SELECT 1 
         FROM recipe_ingredient ri
         JOIN ingredient i ON ri.ingredient_id = i.id
-        WHERE ri.recipe_id = r.id AND i.in_stock = false
+        WHERE ri.recipe_id = r.id and not i.in_stock
       )
       ORDER BY r.name
     `;

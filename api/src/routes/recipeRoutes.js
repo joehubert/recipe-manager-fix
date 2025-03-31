@@ -24,6 +24,15 @@ router.post('/', async (req, res) => {
     }
 });
 
+// GET /recipes/instock/all - Get recipes where all ingredients are in stock
+router.get('/instock/all', recipeController.getWithAllInStock);
+
+// GET /recipes/instock/threshold/:threshold - Get recipes where all but threshold ingredients are in stock
+router.get('/instock/threshold/:threshold', recipeController.getWithAllButThreshold);
+
+// POST /recipes/missing-ingredients - Get missing ingredients for a list of recipes
+router.post('/missing-ingredients', recipeController.getMissingIngredients);
+
 // GET /recipes/:id - Get a recipe by ID
 router.get('/:id', recipeController.getById);
 
@@ -44,14 +53,5 @@ router.post('/:recipeId/ingredients/:ingredientId', recipeController.addIngredie
 
 // DELETE /recipes/:recipeId/ingredients/:ingredientId - Remove an ingredient from a recipe
 router.delete('/:recipeId/ingredients/:ingredientId', recipeController.removeIngredient);
-
-// GET /recipes/instock/all - Get recipes where all ingredients are in stock
-router.get('/instock/all', recipeController.getWithAllInStock);
-
-// GET /recipes/instock/threshold/:threshold - Get recipes where all but threshold ingredients are in stock
-router.get('/instock/threshold/:threshold', recipeController.getWithAllButThreshold);
-
-// POST /recipes/missing-ingredients - Get missing ingredients for a list of recipes
-router.post('/missing-ingredients', recipeController.getMissingIngredients);
 
 module.exports = router;
