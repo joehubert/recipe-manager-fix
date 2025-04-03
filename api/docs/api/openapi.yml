@@ -1,29 +1,48 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Recipe Manager API
-  description: API for personal recipe management application
+  description: |
+    This API provides comprehensive functionality for managing recipes and ingredients for a personal recipe management application.
+    Features include:
+    - Recipe management (create, read, update, delete operations)
+    - Ingredient management
+    - Recipe-ingredient relationship management
+    - Filtering recipes based on ingredient availability
+    - Shopping list generation
   version: 1.0.0
+  contact:
+    name: Recipe Manager Support
+
 servers:
   - url: http://localhost:3000/api
     description: Local development server
+  - url: http://api:3000/api
+    description: Docker-based development server
+
+# Tags for organizing operations
 tags:
+  - name: Health
+    description: API health check endpoints
   - name: Recipes
     description: Recipe management endpoints
   - name: Ingredients
     description: Ingredient management endpoints
-  - name: Health
-    description: API health check
 
+# Path definitions for all API endpoints
 paths:
+  #-----------------------
+  # Health endpoints
+  #-----------------------
   /health:
     get:
       tags:
         - Health
       summary: Check API health
-      description: Returns the health status of the API
+      description: Returns the health status of the API to verify it's running correctly
+      operationId: checkHealth
       responses:
         '200':
-          description: API is working correctly
+          description: API is healthy and operating normally
           content:
             application/json:
               schema:
@@ -32,16 +51,37 @@ paths:
                   status:
                     type: string
                     example: ok
-
+  
+  #-----------------------
+  # Recipe endpoints
+  #-----------------------
   /recipes:
     get:
       tags:
         - Recipes
       summary: Get all recipes
-      description: Returns a list of all recipes
+      description: Returns a list of all recipes with optional filtering options
+      operationId: getAllRecipes
+      parameters:
+        - name: sort
+          in: query
+          description: Field to sort results by
+          required: false
+          schema:
+            type: string
+            enum: [name, favorite]
+            default: name
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
       responses:
         '200':
-          description: A list of recipes
+          description: A list of recipes successfully retrieved
           content:
             application/json:
               schema:
@@ -54,11 +94,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    
     post:
       tags:
         - Recipes
       summary: Create a new recipe
       description: Creates a new recipe with the given name
+      operationId: createRecipe
       requestBody:
         required: true
         content:
@@ -70,7 +112,13 @@ paths:
               properties:
                 name:
                   type: string
+                  description: The name of the recipe
                   example: Spaghetti Carbonara
+                favorite:
+                  type: boolean
+                  description: Whether the recipe is marked as favorite
+                  default: false
+                  example: false
       responses:
         '201':
           description: Recipe created successfully
@@ -79,7 +127,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Recipe'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -97,16 +145,18 @@ paths:
         - Recipes
       summary: Get a recipe by ID
       description: Returns a recipe with the specified ID including its ingredients
+      operationId: getRecipeById
       parameters:
         - name: id
           in: path
+          description: ID of the recipe to retrieve
           required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Recipe details with ingredients
+          description: Recipe details with ingredients retrieved successfully
           content:
             application/json:
               schema:
@@ -116,6 +166,7 @@ paths:
                     properties:
                       ingredients:
                         type: array
+                        description: List of ingredients in this recipe
                         items:
                           $ref: '#/components/schemas/RecipeIngredient'
         '404':
@@ -130,14 +181,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    
     delete:
       tags:
         - Recipes
       summary: Delete a recipe
-      description: Deletes a recipe with the specified ID
+      description: Deletes a recipe with the specified ID and all its ingredients relationships
+      operationId: deleteRecipe
       parameters:
         - name: id
           in: path
+          description: ID of the recipe to delete
           required: true
           schema:
             type: integer
@@ -174,9 +228,11 @@ paths:
         - Recipes
       summary: Rename a recipe
       description: Updates the name of a recipe with the specified ID
+      operationId: renameRecipe
       parameters:
         - name: id
           in: path
+          description: ID of the recipe to rename
           required: true
           schema:
             type: integer
@@ -192,6 +248,7 @@ paths:
               properties:
                 name:
                   type: string
+                  description: The new name for the recipe
                   example: Updated Spaghetti Carbonara
       responses:
         '200':
@@ -201,7 +258,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Recipe'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -224,10 +281,12 @@ paths:
       tags:
         - Recipes
       summary: Toggle favorite status
-      description: Toggles the favorite status of a recipe
+      description: Toggles the favorite status of a recipe (marks as favorite if not, removes favorite if it is)
+      operationId: toggleFavoriteStatus
       parameters:
         - name: id
           in: path
+          description: ID of the recipe to toggle favorite status
           required: true
           schema:
             type: integer
@@ -258,9 +317,11 @@ paths:
         - Recipes
       summary: Duplicate a recipe
       description: Creates a copy of a recipe with all its ingredients
+      operationId: duplicateRecipe
       parameters:
         - name: id
           in: path
+          description: ID of the recipe to duplicate
           required: true
           schema:
             type: integer
@@ -291,20 +352,24 @@ paths:
         - Recipes
       summary: Add an ingredient to a recipe
       description: Adds an ingredient to a recipe with optional amount and units
+      operationId: addIngredientToRecipe
       parameters:
         - name: recipeId
           in: path
+          description: ID of the recipe to add ingredient to
           required: true
           schema:
             type: integer
             format: int64
         - name: ingredientId
           in: path
+          description: ID of the ingredient to add
           required: true
           schema:
             type: integer
             format: int64
       requestBody:
+        description: Optional amount and units information
         content:
           application/json:
             schema:
@@ -312,9 +377,11 @@ paths:
               properties:
                 amount:
                   type: number
+                  description: The amount of this ingredient required
                   example: 2.5
                 units:
                   type: string
+                  description: The unit of measurement for this ingredient
                   enum: [g, kg, oz, lb, ml, l, tsp, tbsp, cup, pint, quart, gallon, piece, slice, pinch, bunch, clove, "to taste"]
                   example: cup
       responses:
@@ -324,26 +391,102 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecipeIngredient'
+        '404':
+          description: Recipe or ingredient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Ingredient already exists in this recipe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    delete:
+    
+    patch:
       tags:
         - Recipes
-      summary: Remove an ingredient from a recipe
-      description: Removes an ingredient from a recipe
+      summary: Update recipe ingredient
+      description: Updates the amount and units for an ingredient in a recipe
+      operationId: updateRecipeIngredient
       parameters:
         - name: recipeId
           in: path
+          description: ID of the recipe containing the ingredient
           required: true
           schema:
             type: integer
             format: int64
         - name: ingredientId
           in: path
+          description: ID of the ingredient to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Updated amount and units information
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  nullable: true
+                  description: The updated amount of this ingredient
+                  example: 3
+                units:
+                  type: string
+                  nullable: true
+                  description: The updated unit of measurement
+                  enum: [g, kg, oz, lb, ml, l, tsp, tbsp, cup, pint, quart, gallon, piece, slice, pinch, bunch, clove, "to taste"]
+                  example: tbsp
+      responses:
+        '200':
+          description: Ingredient updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeIngredient'
+        '404':
+          description: Recipe or ingredient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Recipes
+      summary: Remove an ingredient from a recipe
+      description: Removes an ingredient from a recipe
+      operationId: removeIngredientFromRecipe
+      parameters:
+        - name: recipeId
+          in: path
+          description: ID of the recipe containing the ingredient
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: ingredientId
+          in: path
+          description: ID of the ingredient to remove
           required: true
           schema:
             type: integer
@@ -379,7 +522,8 @@ paths:
       tags:
         - Recipes
       summary: Get recipes with all ingredients in stock
-      description: Returns recipes where all ingredients are in stock
+      description: Returns recipes where all ingredients are marked as in stock
+      operationId: getRecipesWithAllInStock
       responses:
         '200':
           description: List of recipes with all ingredients in stock
@@ -402,14 +546,16 @@ paths:
         - Recipes
       summary: Get recipes with ingredients missing at most the threshold
       description: Returns recipes where at most the specified number of ingredients are not in stock
+      operationId: getRecipesWithThreshold
       parameters:
         - name: threshold
           in: path
+          description: Maximum number of ingredients that can be out of stock
           required: true
           schema:
             type: integer
             minimum: 0
-          description: Maximum number of ingredients that can be out of stock
+            example: 2
       responses:
         '200':
           description: List of recipes meeting the threshold criteria
@@ -427,7 +573,7 @@ paths:
                           description: Number of ingredients not in stock
                           example: 1
         '400':
-          description: Bad request
+          description: Bad request - invalid threshold
           content:
             application/json:
               schema:
@@ -444,7 +590,8 @@ paths:
       tags:
         - Recipes
       summary: Get missing ingredients for recipes
-      description: Returns a list of ingredients that are not in stock for the specified recipes
+      description: Returns a list of ingredients that are not in stock for the specified recipes. Useful for shopping list generation.
+      operationId: getMissingIngredients
       requestBody:
         required: true
         content:
@@ -456,6 +603,7 @@ paths:
               properties:
                 recipeIds:
                   type: array
+                  description: Array of recipe IDs to check for missing ingredients
                   items:
                     type: integer
                   example: [1, 2, 3]
@@ -469,7 +617,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -481,15 +629,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
   
+  #-----------------------
+  # Ingredient endpoints
+  #-----------------------
   /ingredients:
     get:
       tags:
         - Ingredients
       summary: Get all ingredients
       description: Returns a list of all ingredients
+      operationId: getAllIngredients
       responses:
         '200':
-          description: A list of ingredients
+          description: A list of ingredients successfully retrieved
           content:
             application/json:
               schema:
@@ -502,11 +654,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    
     post:
       tags:
         - Ingredients
       summary: Create a new ingredient
-      description: Creates a new ingredient
+      description: Creates a new ingredient with a name, category, and optional in-stock status
+      operationId: createIngredient
       requestBody:
         required: true
         content:
@@ -519,11 +673,18 @@ paths:
               properties:
                 name:
                   type: string
+                  description: The name of the ingredient
                   example: Tomato
                 category:
                   type: string
+                  description: The category of the ingredient
                   enum: [meat, produce, starch, extra]
                   example: produce
+                in_stock:
+                  type: boolean
+                  description: Whether the ingredient is currently in stock
+                  default: false
+                  example: true
       responses:
         '201':
           description: Ingredient created successfully
@@ -532,7 +693,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - ingredient with this name already exists
           content:
             application/json:
               schema:
@@ -543,13 +710,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+  
   /ingredients/categories:
     post:
       tags:
         - Ingredients
       summary: Get ingredients by categories
       description: Returns ingredients that belong to the specified categories
+      operationId: getIngredientsByCategories
       requestBody:
         required: true
         content:
@@ -561,6 +729,7 @@ paths:
               properties:
                 categories:
                   type: array
+                  description: Array of categories to filter by
                   items:
                     type: string
                     enum: [meat, produce, starch, extra]
@@ -575,7 +744,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -593,9 +762,11 @@ paths:
         - Ingredients
       summary: Rename an ingredient
       description: Updates the name of an ingredient
+      operationId: renameIngredient
       parameters:
         - name: id
           in: path
+          description: ID of the ingredient to rename
           required: true
           schema:
             type: integer
@@ -611,6 +782,7 @@ paths:
               properties:
                 name:
                   type: string
+                  description: The new name for the ingredient
                   example: Cherry Tomato
       responses:
         '200':
@@ -620,13 +792,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Ingredient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - ingredient with this name already exists
           content:
             application/json:
               schema:
@@ -644,9 +822,11 @@ paths:
         - Ingredients
       summary: Delete an ingredient
       description: Deletes an ingredient with the specified ID
+      operationId: deleteIngredient
       parameters:
         - name: id
           in: path
+          description: ID of the ingredient to delete
           required: true
           schema:
             type: integer
@@ -683,9 +863,11 @@ paths:
         - Ingredients
       summary: Update ingredient in-stock status
       description: Updates whether an ingredient is in stock
+      operationId: updateIngredientInStockStatus
       parameters:
         - name: id
           in: path
+          description: ID of the ingredient to update
           required: true
           schema:
             type: integer
@@ -701,6 +883,7 @@ paths:
               properties:
                 inStock:
                   type: boolean
+                  description: The new in-stock status
                   example: true
       responses:
         '200':
@@ -710,7 +893,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -728,12 +911,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
   
-  /ingredients/bulk-instock:
+  /ingredients/bulk-update-stock:
     patch:
       tags:
         - Ingredients
       summary: Bulk update ingredient in-stock status
-      description: Updates the in-stock status for multiple ingredients
+      description: Updates the in-stock status for multiple ingredients at once
+      operationId: bulkUpdateIngredientInStockStatus
       requestBody:
         required: true
         content:
@@ -746,11 +930,13 @@ paths:
               properties:
                 ids:
                   type: array
+                  description: Array of ingredient IDs to update
                   items:
                     type: integer
                   example: [1, 2, 3]
                 inStock:
                   type: boolean
+                  description: The new in-stock status to set for all specified ingredients
                   example: true
       responses:
         '200':
@@ -762,7 +948,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -779,7 +965,8 @@ paths:
       tags:
         - Ingredients
       summary: Import ingredients
-      description: Imports a list of ingredients, skipping duplicates
+      description: Imports a list of ingredients, skipping duplicates with existing ingredients
+      operationId: importIngredients
       requestBody:
         required: true
         content:
@@ -791,6 +978,7 @@ paths:
               properties:
                 ingredients:
                   type: array
+                  description: Array of ingredients to import
                   items:
                     type: object
                     required:
@@ -799,11 +987,18 @@ paths:
                     properties:
                       name:
                         type: string
+                        description: The name of the ingredient
                         example: Tomato
                       category:
                         type: string
+                        description: The category of the ingredient
                         enum: [meat, produce, starch, extra]
                         example: produce
+                      in_stock:
+                        type: boolean
+                        description: Whether the ingredient is in stock
+                        default: false
+                        example: false
       responses:
         '201':
           description: Ingredients imported successfully
@@ -814,7 +1009,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ingredient'
         '400':
-          description: Bad request
+          description: Bad request - invalid input
           content:
             application/json:
               schema:
@@ -826,81 +1021,122 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+# Reusable components
 components:
   schemas:
+    # Recipe model schema
     Recipe:
       type: object
+      required:
+        - id
+        - name
+        - favorite
       properties:
         id:
           type: integer
           format: int64
+          description: Unique identifier for the recipe
           example: 1
         name:
           type: string
+          description: Name of the recipe
           example: Spaghetti Carbonara
         favorite:
           type: boolean
+          description: Whether the recipe is marked as favorite
           example: false
+      description: A recipe object
     
+    # Ingredient model schema
     Ingredient:
       type: object
+      required:
+        - id
+        - name
+        - category
+        - in_stock
       properties:
         id:
           type: integer
           format: int64
+          description: Unique identifier for the ingredient
           example: 1
         name:
           type: string
+          description: Name of the ingredient
           example: Tomato
         category:
           type: string
+          description: Category the ingredient belongs to
           enum: [meat, produce, starch, extra]
           example: produce
         in_stock:
           type: boolean
-          example: false
+          description: Whether the ingredient is currently in stock
+          example: true
+      description: An ingredient object
     
+    # RecipeIngredient junction model schema
     RecipeIngredient:
       type: object
+      required:
+        - id
+        - recipe_id
+        - ingredient_id
+        - seq
       properties:
         id:
           type: integer
           format: int64
+          description: Unique identifier for the recipe-ingredient relationship
           example: 1
         recipe_id:
           type: integer
           format: int64
+          description: ID of the recipe
           example: 1
         ingredient_id:
           type: integer
           format: int64
+          description: ID of the ingredient
           example: 2
         seq:
           type: integer
-          description: Display order of the ingredient
+          description: Display order of the ingredient within the recipe
           example: 1
         amount:
           type: number
           nullable: true
+          description: Amount of the ingredient required (optional)
           example: 2.5
         units:
           type: string
           nullable: true
+          description: Unit of measurement for the ingredient (optional)
           enum: [g, kg, oz, lb, ml, l, tsp, tbsp, cup, pint, quart, gallon, piece, slice, pinch, bunch, clove, "to taste"]
           example: cup
         ingredient_name:
           type: string
+          description: Name of the ingredient (included for convenience)
           example: Tomato
         category:
           type: string
+          description: Category of the ingredient (included for convenience)
           example: produce
         in_stock:
           type: boolean
+          description: Whether the ingredient is in stock (included for convenience)
           example: false
+      description: A relationship between a recipe and an ingredient, with quantity information
     
+    # Error response schema
     Error:
       type: object
+      required:
+        - error
       properties:
         error:
           type: string
+          description: Error message describing what went wrong
           example: Something went wrong
+      description: Standard error response object
